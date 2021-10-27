@@ -12,19 +12,5 @@ defmodule GenReport.Parser do
     |> String.trim()
     |> String.split(",")
     |> List.update_at(1, &String.to_integer/1)
-    |> parse_date()
-  end
-
-  defp parse_date(line) do
-    [name, hours, day, month, year] = line
-
-    date =
-      [year, month, day]
-      |> Enum.join("-")
-      |> Datex.Date.add(0, :elixir)
-
-    line = [name, hours, date]
-
-    {:ok, line}
   end
 end
