@@ -27,7 +27,8 @@ defmodule GenReport.MixProject do
   defp deps do
     [
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:json_response, git: "https://github.com/joaopealves/json_response"}
+      {:json_response, git: "https://github.com/joaopealves/json_response"},
+      {:datex, "~> 1.0.0"}
     ]
   end
 end

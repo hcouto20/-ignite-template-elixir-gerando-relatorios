@@ -9,13 +9,13 @@ defmodule GenReport do
   end
 
   def fetch_higher_cost(map) do
-    {:ok, Enum.min_max_by(map, fn line -> line.hours end)}
+    map
+    |> Enum.min_max_by(fn line -> line.hours end)
   end
 
-  def sum_values([name, hours, date]) do
-    users = %{name: name, hours: hours, date: date}
-
-    users
+  def sum_values({:ok, line}) do
+   line
   end
 
+  def sum_values({:error, _reason}), do: {:error, "Invalid date"}
 end
