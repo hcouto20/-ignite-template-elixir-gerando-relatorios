@@ -1,5 +1,19 @@
 defmodule GenReport.Parser do
-  alias Date
+
+  @months %{
+    "1" => "janeiro",
+    "2" => "fevereiro",
+    "3" => "março",
+    "4" => "abril",
+    "5" => "maio",
+    "6" => "junho",
+    "7" => "julho",
+    "8" => "agosto",
+    "9" => "setembro",
+    "10" => "outubro",
+    "11" => "novembro",
+    "12" => "dezembro"
+  }
 
   def parse_file(filename) do
     "reports/#{filename}"
@@ -13,5 +27,6 @@ defmodule GenReport.Parser do
     |> String.split(",")
     |> List.update_at(0, &String.to_atom/1)
     |> List.update_at(1, &String.to_integer/1)
+    |> List.update_at(3, &String.to_atom(Map.get(@months, &1)))
   end
 end
