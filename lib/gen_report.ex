@@ -1,57 +1,79 @@
 defmodule GenReport do
   alias GenReport.Parser
 
-  @available_users [
-    :Daniele,
-    :Mayk,
-    :Giuliano,
-    :Cleiton,
-    :Jakeliny,
-    :Joseph,
-    :Diego,
-    :Danilo,
-    :Rafael,
-    :Vinicius
-  ]
-
-  @available_month [
-    :janeiro,
-    :fevereiro,
-    :março,
-    :abril,
-    :maio,
-    :junho,
-    :julho,
-    :agosto,
-    :setembro,
-    :outubro,
-    :novembro,
-    :dezembro
-  ]
-
   def build(filename) do
     filename
     |> Parser.parse_file()
     |> Enum.reduce(report_acc(), fn line, report -> sum_values(line, report) end)
   end
 
-  defp sum_values([name, hour, _day, month, year], %{all_hours: all_hours, hours_per_month: hours_per_month, hours_per_year: hours_per_year}) do
-    all_hours = Map.put(all_hours, name, all_hours[name] + hour)
+  def build_from_many(filenames) when not is_list(filenames) do
+    {:error, "Please provide a list of strings"}
+  end
 
-    hours_per_month = Map.put(hours_per_month, month, %{name => %{month => hour}})
+  def build_from_many(filenames) do
+    result =
+      filenames
+      |> Task.async_stream(&build/1)
+      |> Enum.reduce(report_acc(), fn {:ok, result}, report -> sum_reports(result, report) end)
 
-    hours_per_year = Map.put(hours_per_year, year, %{name => %{year => hour}})
+    {:ok, result}
+  end
 
-    %{all_hours: all_hours, hours_per_month: hours_per_month, hours_per_year: hours_per_year}
+  defp sum_values([name, hour, _day, month, year], %{
+         all_hours: all_hours,
+         hours_per_month: hours_per_month,
+         hours_per_year: hours_per_year
+       }) do
+    all_hours = merge_maps(all_hours, %{name => hour})
+
+    hours_per_month = merge_sub(hours_per_month, %{name => %{month => hour}})
+
+    hours_per_year = merge_sub(hours_per_year, %{name => %{year => hour}})
+
+    build_report(all_hours, hours_per_month, hours_per_year)
+  end
+
+  defp merge_sub(map1, map2) do
+    Map.merge(map1, map2, fn _k, value1, value2 ->
+      merge_maps(value1, value2)
+    end)
+  end
+
+  defp merge_maps(map1, map2) do
+    Map.merge(map1, map2, fn _k, value1, value2 -> value1 + value2 end)
+  end
+
+  defp sum_reports(
+         %{
+           :all_hours => all_hours1,
+           :hours_per_month => hours_per_month1,
+           :hours_per_year => hours_per_year1
+         },
+         %{
+           :all_hours => all_hours2,
+           :hours_per_month => hours_per_month2,
+           :hours_per_year => hours_per_year2
+         }
+       ) do
+    all_hours = merge_maps(all_hours1, all_hours2)
+
+    hours_per_month = merge_sub(hours_per_month1, hours_per_month2)
+
+    hours_per_year = merge_sub(hours_per_year1, hours_per_year2)
+
+    build_report(all_hours, hours_per_month, hours_per_year)
   end
 
   defp report_acc() do
-    all_hours = Enum.into(@available_users, %{}, &{(&1), 0})
+    build_report(%{}, %{}, %{})
+  end
 
-    hours_per_month = Enum.into(@available_month, %{}, &{(&1), 0})
-
-    hours_per_year = Enum.into(2016..2020, %{}, &{Integer.to_string(&1), 0})
-
-    %{all_hours: all_hours, hours_per_month: hours_per_month, hours_per_year: hours_per_year}
+  defp build_report(all_hours, hours_per_month, hours_per_year) do
+    %{
+      :all_hours => all_hours,
+      :hours_per_month => hours_per_month,
+      :hours_per_year => hours_per_year
+    }
   end
 end
