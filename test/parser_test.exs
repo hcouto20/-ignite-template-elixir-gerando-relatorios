@@ -5,12 +5,13 @@ defmodule GenReport.ParserTest do
 
   describe "parse_file/1" do
     test "parses the file" do
-      file_name = "gen_report.csv"
+      filename = "gen_report.csv"
 
       response =
-        file_name
+        filename
         |> Parser.parse_file()
-        |> Enum.member?(["daniele", 7, 29, "abril", 2018])
+        |> Enum.map(& (&1))
+        |> Enum.member?([:Daniele, 7, "29", :abril, "2018"])
 
       assert response == true
     end
