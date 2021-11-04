@@ -7,6 +7,10 @@ defmodule GenReport do
     |> Enum.reduce(report_acc(), fn line, report -> sum_values(line, report) end)
   end
 
+  def build(), do: {:error, "Enter a filename"}
+
+  def build_from_many(), do: {:error, "Enter a list of files"}
+
   def build_from_many(filenames) when not is_list(filenames) do
     {:error, "Please provide a list of strings"}
   end
